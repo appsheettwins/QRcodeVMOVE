@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V-MOVE Card Management System - High Res</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* Card Styles - Based on 8272x12089 */
+        .card-container {
+            width: 827px;
+            height: 1209px;
+            background-color: white;
+            background-image: url('https://lh3.googleusercontent.com/u/0/d/1PcQd4a1ALYL48oNbLWaWS5btab2RZL2z=w1000');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform-origin: top left;
+        }
+        
+        .content {
+            z-index: 10;
+            margin-top: 60px;
+            text-align: center;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+        }
+
+        .logo-img {
+            width: 220px;
+            height: auto;
+            margin-bottom: 40px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+        }
+
+        .id-number {
+            font-weight: bold;
+            color: #1e40af;
+            line-height: 1;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+        }
+
+        .sub-text {
+            color: #1e40af;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 5px 30px;
+            border-radius: 50px;
+            margin-bottom: 20px;
+        }
+
+        .qrcode-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .qrcode-box {
+            background: white;
+            padding: 25px;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
+        /* Layout for Screen Preview */
+        .preview-grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px; 
+            background: #e2e8f0; 
+            padding: 10px;
+            width: fit-content;
+            margin: 0 auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+        .preview-card-wrapper {
+            overflow: hidden;
+            background: white;
+            border: none; 
+        }
+        .card-scaled {
+            transform: scale(0.15); 
+            transform-origin: top left;
+            width: 827px;
+            height: 1209px;
+        }
+        .wrapper-scaled {
+            width: 124.05px; 
+            height: 181.35px; 
+        }
+
+        /* Print Specific Styles */
+        #print-area {
+            display: none;
+            width: 210mm;
+            height: 297mm;
+            background: white;
+        }
+        .print-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 1mm; /* ปรับลดขนาดช่องว่างเหลือ 1mm ตามคำขอ */
+            width: 205mm; /* ขยายความกว้าง Grid ให้เกือบเต็มหน้ากระดาษ */
+            height: 290mm;
+            margin: 3.5mm auto; /* ปรับ Margin ให้สมดุล */
+        }
+        .print-card-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+        }
+        .print-card-scaled {
+            /* ปรับสเกลให้พอดีกับช่องที่มี Gap 1mm */
+            transform: scale(0.061); 
+            transform-origin: center center;
+            width: 827px;
+            height: 1209px;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area {
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                margin: 0;
+            }
+            @page {
+                size: A4;
+                margin: 0;
+            }
+        }
+
+        .tab-active {
+            border-bottom: 4px solid #db2777;
+            color: #db2777;
+        }
+
+        /* Custom input styles for pink theme */
+        input[type="range"] {
+            accent-color: #db2777;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <nav class="bg-white shadow-sm border-b no-print">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2">
+                    <div class="bg-pink-600 p-1.5 rounded-lg text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </svg>
+                    </div>
+                    <span class="font-bold text-xl text-gray-800 tracking-tight">V-MOVE Studio</span>
+                </div>
+                <div class="flex space-x-8 h-full">
+                    <button onclick="switchTab('edit')" id="tab-edit" class="px-3 py-2 text-sm font-bold h-full tab-active transition-all">🎨 ปรับแต่ง</button>
+                    <button onclick="switchTab('print')" id="tab-print" class="px-3 py-2 text-sm font-bold h-full text-gray-500 hover:text-pink-600 transition-all">🖼️ หน้ารวมภาพ 16 ใบ (4x4)</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-6 no-print">
+        
+        <!-- Single Card Edit Section -->
+        <div id="section-edit" class="flex flex-col lg:flex-row gap-8">
+            <div class="w-full lg:w-1/3 space-y-4">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border overflow-y-auto max-h-[80vh]">
+                    <h2 class="font-bold text-gray-700 mb-4 border-b pb-2 text-lg">⚙️ การตั้งค่าบัตร</h2>
+                    
+                    <div class="space-y-6">
+                        <!-- ID Config -->
+                        <div class="space-y-3">
+                            <label class="block text-sm font-bold text-gray-600 uppercase">หมายเลข ID</label>
+                            <input type="text" id="idInputSingle" value="2" maxlength="15" 
+                                class="w-full px-4 py-3 border rounded-xl text-2xl font-bold text-blue-900 text-center focus:ring-2 focus:ring-pink-300 outline-none"
+                                oninput="syncInputs()">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-400">ขนาดตัวเลข</span>
+                                <span id="sizeValSingle" class="text-xs font-bold text-pink-600">2.0rem</span>
+                            </div>
+                            <input type="range" id="sizeInputSingle" min="1" max="15" step="0.1" value="2" 
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                oninput="syncInputs()">
+                        </div>
+
+                        <!-- Text Config -->
+                        <div class="space-y-3 pt-4 border-t">
+                            <label class="block text-sm font-bold text-gray-600 uppercase">ข้อความเพิ่มเติม</label>
+                            <textarea id="textInputSingle" rows="2" class="w-full px-4 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-pink-300 outline-none" oninput="syncInputs()">บัตรประจำตัว แทนการเขียนชื่อ</textarea>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-400">ขนาดข้อความ</span>
+                                <span id="textSizeVal" class="text-xs font-bold text-pink-600">2.8rem</span>
+                            </div>
+                            <input type="range" id="textSizeInput" min="1" max="8" step="0.1" value="2.8" 
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                oninput="syncInputs()">
+                        </div>
+
+                        <!-- QR Code Config -->
+                        <div class="space-y-3 pt-4 border-t">
+                            <label class="block text-sm font-bold text-gray-600 uppercase">QR CODE</label>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-400">ขนาด QR</span>
+                                <span id="qrSizeVal" class="text-xs font-bold text-pink-600">450px</span>
+                            </div>
+                            <input type="range" id="qrSizeInput" min="200" max="600" step="10" value="450" 
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                oninput="syncInputs()">
+                            
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-gray-400">ตำแหน่ง (ขึ้น-ลง)</span>
+                                <span id="qrOffsetVal" class="text-xs font-bold text-pink-600">0px</span>
+                            </div>
+                            <input type="range" id="qrOffsetInput" min="-200" max="200" step="5" value="0" 
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                oninput="syncInputs()">
+                        </div>
+                    </div>
+                </div>
+                <button onclick="downloadSingleCard()" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                    💾 บันทึกรูปภาพบัตร 1 ใบ (HD)
+                </button>
+            </div>
+
+            <div class="flex-1 flex flex-col items-center bg-gray-50 p-8 rounded-3xl border border-dashed border-gray-300 overflow-hidden">
+                <p class="text-xs font-bold text-gray-400 mb-4 uppercase tracking-tighter">พรีวิวบัตร</p>
+                <div class="scale-[0.4] origin-top">
+                    <div id="single-preview"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4x4 Grid Section -->
+        <div id="section-print" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="font-bold text-gray-800 text-lg">รวมภาพ 16 ใบ (ช่องว่าง 1mm)</h2>
+                    <p class="text-gray-500 text-sm">ระยะห่าง 1 มม. เพื่อความกระชับที่สุดในการตัด</p>
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 rounded-2xl shadow-lg flex items-center gap-2">
+                        🖨️ ปริ้นลงกระดาษ A4
+                    </button>
+                    <button onclick="downloadBatchImage()" class="bg-gray-800 hover:bg-black text-white font-bold px-8 py-4 rounded-2xl flex items-center gap-2">
+                        🖼️ บันทึกเป็นรูปภาพรวม (4x4)
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-auto bg-gray-300 p-10 rounded-2xl shadow-inner flex justify-center">
+                <div id="preview-grid" class="preview-grid-container" style="gap: 1px;">
+                    <!-- 16 Cards -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="print-area">
+        <div id="print-grid-container" class="print-grid"></div>
+    </div>
+
+    <template id="card-template">
+        <div class="card-container">
+            <div class="content">
+                <img src="https://lh3.googleusercontent.com/u/0/d/1TWWoaINpoMvG1lxTfJeY3Fabv4y9n6-h=w1000" alt="Logo" class="logo-img" crossorigin="anonymous">
+                <div class="id-number">ID</div>
+                <div class="sub-text">TEXT</div>
+                <div class="qrcode-wrapper">
+                    <div class="qrcode-box">
+                        <div class="qr-target"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        function switchTab(target) {
+            document.getElementById('section-edit').classList.toggle('hidden', target !== 'edit');
+            document.getElementById('section-print').classList.toggle('hidden', target !== 'print');
+            document.getElementById('tab-edit').classList.toggle('tab-active', target === 'edit');
+            document.getElementById('tab-print').classList.toggle('tab-active', target === 'print');
+            updateAll();
+        }
+
+        function syncInputs() {
+            updateAll();
+        }
+
+        function updateAll() {
+            const startIdStr = document.getElementById('idInputSingle').value;
+            const startId = parseInt(startIdStr) || 2;
+            const idSize = document.getElementById('sizeInputSingle').value;
+            const text = document.getElementById('textInputSingle').value;
+            const textSize = document.getElementById('textSizeInput').value;
+            const qrSize = parseInt(document.getElementById('qrSizeInput').value);
+            const qrOffset = document.getElementById('qrOffsetInput').value;
+
+            document.getElementById('sizeValSingle').innerText = idSize + 'rem';
+            document.getElementById('textSizeVal').innerText = textSize + 'rem';
+            document.getElementById('qrSizeVal').innerText = qrSize + 'px';
+            document.getElementById('qrOffsetVal').innerText = qrOffset + 'px';
+
+            const config = {
+                id: startIdStr,
+                idSize: idSize,
+                text: text,
+                textSize: textSize,
+                qrSize: qrSize,
+                qrOffset: qrOffset
+            };
+
+            renderSingle(config);
+            renderBatch(startId, config);
+        }
+
+        function renderSingle(config) {
+            const container = document.getElementById('single-preview');
+            container.innerHTML = '';
+            container.appendChild(createCard(config, 'qr-single'));
+        }
+
+        function renderBatch(startId, config) {
+            const previewGrid = document.getElementById('preview-grid');
+            const printGrid = document.getElementById('print-grid-container');
+            previewGrid.innerHTML = '';
+            printGrid.innerHTML = '';
+
+            for (let i = 0; i < 16; i++) {
+                const currentId = (startId + i).toString();
+                const currentConfig = { ...config, id: currentId };
+                
+                // Preview Screen
+                const previewWrapper = document.createElement('div');
+                previewWrapper.className = 'preview-card-wrapper wrapper-scaled';
+                const previewCard = createCard(currentConfig, `qr-p-${i}`);
+                previewCard.classList.add('card-scaled');
+                previewWrapper.appendChild(previewCard);
+                previewGrid.appendChild(previewWrapper);
+
+                // Print Area
+                const printWrapper = document.createElement('div');
+                printWrapper.className = 'print-card-wrapper';
+                const printCard = createCard(currentConfig, `qr-pr-${i}`);
+                printCard.classList.add('print-card-scaled');
+                printWrapper.appendChild(printCard);
+                printGrid.appendChild(printWrapper);
+            }
+        }
+
+        function createCard(config, qrId) {
+            const template = document.getElementById('card-template').content.cloneNode(true);
+            const card = template.querySelector('.card-container');
+            
+            const idEl = card.querySelector('.id-number');
+            idEl.innerText = config.id;
+            idEl.style.fontSize = config.idSize + 'rem';
+
+            const textEl = card.querySelector('.sub-text');
+            textEl.innerText = config.text;
+            textEl.style.fontSize = config.textSize + 'rem';
+
+            const qrWrapper = card.querySelector('.qrcode-wrapper');
+            qrWrapper.style.top = config.qrOffset + 'px';
+
+            const qrTarget = card.querySelector('.qr-target');
+            qrTarget.id = qrId;
+            
+            setTimeout(() => {
+                new QRCode(qrId, {
+                    text: config.id,
+                    width: config.qrSize,
+                    height: config.qrSize,
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }, 0);
+            
+            return card;
+        }
+
+        async function downloadSingleCard() {
+            const card = document.querySelector('#single-preview .card-container');
+            const canvas = await html2canvas(card, { scale: 10, useCORS: true, backgroundColor: null });
+            saveCanvas(canvas, `VMOVE-SINGLE-${document.getElementById('idInputSingle').value}.png`);
+        }
+
+        async function downloadBatchImage() {
+            const grid = document.getElementById('preview-grid');
+            const canvas = await html2canvas(grid, { 
+                scale: 6, 
+                useCORS: true,
+                backgroundColor: "#ffffff",
+                logging: false
+            });
+            saveCanvas(canvas, `VMOVE-BATCH-4x4-1mmGap.png`);
+        }
+
+        function saveCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        }
+
+        window.onload = updateAll;
+    </script>
+</body>
+</html>
