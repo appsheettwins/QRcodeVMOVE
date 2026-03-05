@@ -84,17 +84,17 @@
         .preview-grid-container {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px; 
-            background: #e2e8f0; 
+            gap: 1px; /* ระยะห่าง 1mm สำหรับแนวตัด */
+            background: #ffffff; /* ปรับเป็นสีขาวตามต้องการ */
             padding: 10px;
             width: fit-content;
             margin: 0 auto;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
         }
         .preview-card-wrapper {
             overflow: hidden;
             background: white;
-            border: none; 
+            border: 1px solid #f0f0f0; /* เพิ่มเส้นขอบบางๆ เพื่อให้เห็นขอบบัตรบนพื้นขาว */
         }
         .card-scaled {
             transform: scale(0.15); 
@@ -118,10 +118,11 @@
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             grid-template-rows: repeat(4, 1fr);
-            gap: 1mm; /* ปรับลดขนาดช่องว่างเหลือ 1mm ตามคำขอ */
-            width: 205mm; /* ขยายความกว้าง Grid ให้เกือบเต็มหน้ากระดาษ */
+            gap: 1mm; 
+            width: 205mm; 
             height: 290mm;
-            margin: 3.5mm auto; /* ปรับ Margin ให้สมดุล */
+            margin: 3.5mm auto; 
+            background: white;
         }
         .print-card-wrapper {
             width: 100%;
@@ -133,7 +134,6 @@
             background: white;
         }
         .print-card-scaled {
-            /* ปรับสเกลให้พอดีกับช่องที่มี Gap 1mm */
             transform: scale(0.061); 
             transform-origin: center center;
             width: 827px;
@@ -161,7 +161,6 @@
             color: #db2777;
         }
 
-        /* Custom input styles for pink theme */
         input[type="range"] {
             accent-color: #db2777;
         }
@@ -263,8 +262,8 @@
         <div id="section-print" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-xl shadow-sm border flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h2 class="font-bold text-gray-800 text-lg">รวมภาพ 16 ใบ (ช่องว่าง 1mm)</h2>
-                    <p class="text-gray-500 text-sm">ระยะห่าง 1 มม. เพื่อความกระชับที่สุดในการตัด</p>
+                    <h2 class="font-bold text-gray-800 text-lg">รวมภาพ 16 ใบ (พื้นหลังสีขาว)</h2>
+                    <p class="text-gray-500 text-sm">หน้าพรีวิวและหน้าปริ้นใช้พื้นหลังสีขาว เพื่อความสะอาดและประหยัดหมึก</p>
                 </div>
                 <div class="flex gap-4">
                     <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 rounded-2xl shadow-lg flex items-center gap-2">
@@ -276,8 +275,9 @@
                 </div>
             </div>
 
-            <div class="overflow-auto bg-gray-300 p-10 rounded-2xl shadow-inner flex justify-center">
-                <div id="preview-grid" class="preview-grid-container" style="gap: 1px;">
+            <!-- ปรับพื้นหลังคอนเทนเนอร์เป็นสีขาว -->
+            <div class="overflow-auto bg-white p-10 rounded-2xl shadow-inner border flex justify-center">
+                <div id="preview-grid" class="preview-grid-container">
                     <!-- 16 Cards -->
                 </div>
             </div>
@@ -359,7 +359,6 @@
                 const currentId = (startId + i).toString();
                 const currentConfig = { ...config, id: currentId };
                 
-                // Preview Screen
                 const previewWrapper = document.createElement('div');
                 previewWrapper.className = 'preview-card-wrapper wrapper-scaled';
                 const previewCard = createCard(currentConfig, `qr-p-${i}`);
@@ -367,7 +366,6 @@
                 previewWrapper.appendChild(previewCard);
                 previewGrid.appendChild(previewWrapper);
 
-                // Print Area
                 const printWrapper = document.createElement('div');
                 printWrapper.className = 'print-card-wrapper';
                 const printCard = createCard(currentConfig, `qr-pr-${i}`);
@@ -421,7 +419,7 @@
                 backgroundColor: "#ffffff",
                 logging: false
             });
-            saveCanvas(canvas, `VMOVE-BATCH-4x4-1mmGap.png`);
+            saveCanvas(canvas, `VMOVE-BATCH-4x4-WhiteBG.png`);
         }
 
         function saveCanvas(canvas, filename) {
