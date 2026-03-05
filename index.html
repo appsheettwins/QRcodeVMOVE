@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V-MOVE Card Management System - High Res</title>
+    <title>V-MOVE Card Management System - V1.2 (Auto Batch Sync)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -84,8 +84,8 @@
         .preview-grid-container {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 1px; /* ระยะห่าง 1mm สำหรับแนวตัด */
-            background: #ffffff; /* ปรับเป็นสีขาวตามต้องการ */
+            gap: 1px; 
+            background: #ffffff; 
             padding: 10px;
             width: fit-content;
             margin: 0 auto;
@@ -94,7 +94,7 @@
         .preview-card-wrapper {
             overflow: hidden;
             background: white;
-            border: 1px solid #f0f0f0; /* เพิ่มเส้นขอบบางๆ เพื่อให้เห็นขอบบัตรบนพื้นขาว */
+            border: 1px solid #f0f0f0; 
         }
         .card-scaled {
             transform: scale(0.15); 
@@ -164,6 +164,26 @@
         input[type="range"] {
             accent-color: #db2777;
         }
+
+        /* Style for Radio Buttons used as Batch Selection */
+        .batch-chip input[type="radio"] {
+            accent-color: #db2777;
+            width: 1.2rem;
+            height: 1.2rem;
+            cursor: pointer;
+        }
+
+        .batch-chip {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .batch-chip:hover {
+            background-color: #fce7f3;
+        }
+        .batch-chip.active {
+            border-color: #db2777;
+            background-color: #fdf2f8;
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -177,7 +197,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                         </svg>
                     </div>
-                    <span class="font-bold text-xl text-gray-800 tracking-tight">V-MOVE Studio</span>
+                    <span class="font-bold text-xl text-gray-800 tracking-tight">V-MOVE Studio [V1.2]</span>
                 </div>
                 <div class="flex space-x-8 h-full">
                     <button onclick="switchTab('edit')" id="tab-edit" class="px-3 py-2 text-sm font-bold h-full tab-active transition-all">🎨 ปรับแต่ง</button>
@@ -189,19 +209,17 @@
 
     <main class="max-w-7xl mx-auto p-6 no-print">
         
-        <!-- Single Card Edit Section -->
         <div id="section-edit" class="flex flex-col lg:flex-row gap-8">
             <div class="w-full lg:w-1/3 space-y-4">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border overflow-y-auto max-h-[80vh]">
                     <h2 class="font-bold text-gray-700 mb-4 border-b pb-2 text-lg">⚙️ การตั้งค่าบัตร</h2>
                     
                     <div class="space-y-6">
-                        <!-- ID Config -->
                         <div class="space-y-3">
-                            <label class="block text-sm font-bold text-gray-600 uppercase">หมายเลข ID</label>
-                            <input type="text" id="idInputSingle" value="2" maxlength="15" 
+                            <label class="block text-sm font-bold text-gray-600 uppercase">หมายเลข ID เริ่มต้น</label>
+                            <input type="number" id="idInputSingle" value="1" min="1"
                                 class="w-full px-4 py-3 border rounded-xl text-2xl font-bold text-blue-900 text-center focus:ring-2 focus:ring-pink-300 outline-none"
-                                oninput="syncInputs()">
+                                oninput="handleIdInput()">
                             <div class="flex justify-between items-center">
                                 <span class="text-xs text-gray-400">ขนาดตัวเลข</span>
                                 <span id="sizeValSingle" class="text-xs font-bold text-pink-600">2.0rem</span>
@@ -211,7 +229,6 @@
                                 oninput="syncInputs()">
                         </div>
 
-                        <!-- Text Config -->
                         <div class="space-y-3 pt-4 border-t">
                             <label class="block text-sm font-bold text-gray-600 uppercase">ข้อความเพิ่มเติม</label>
                             <textarea id="textInputSingle" rows="2" class="w-full px-4 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-pink-300 outline-none" oninput="syncInputs()">บัตรประจำตัว แทนการเขียนชื่อ</textarea>
@@ -224,7 +241,6 @@
                                 oninput="syncInputs()">
                         </div>
 
-                        <!-- QR Code Config -->
                         <div class="space-y-3 pt-4 border-t">
                             <label class="block text-sm font-bold text-gray-600 uppercase">QR CODE</label>
                             <div class="flex justify-between items-center">
@@ -251,7 +267,7 @@
             </div>
 
             <div class="flex-1 flex flex-col items-center bg-gray-50 p-8 rounded-3xl border border-dashed border-gray-300 overflow-hidden">
-                <p class="text-xs font-bold text-gray-400 mb-4 uppercase tracking-tighter">พรีวิวบัตร</p>
+                <p class="text-xs font-bold text-gray-400 mb-4 uppercase tracking-tighter">พรีวิวบัตร (ใบแรก)</p>
                 <div class="scale-[0.4] origin-top">
                     <div id="single-preview"></div>
                 </div>
@@ -260,25 +276,35 @@
 
         <!-- 4x4 Grid Section -->
         <div id="section-print" class="hidden space-y-6">
+            <!-- Batch Selector Panel -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border space-y-4">
+                <div class="flex items-center gap-2 border-b pb-2">
+                    <span class="text-pink-600">✅</span>
+                    <h3 class="font-bold text-gray-700 uppercase text-sm tracking-widest">ชุดลำดับ ID (Auto-Sync)</h3>
+                </div>
+                <div id="batch-selector" class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <!-- Checkboxes will be generated here -->
+                </div>
+            </div>
+
             <div class="bg-white p-6 rounded-xl shadow-sm border flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h2 class="font-bold text-gray-800 text-lg">รวมภาพ 16 ใบ (พื้นหลังสีขาว)</h2>
-                    <p class="text-gray-500 text-sm">หน้าพรีวิวและหน้าปริ้นใช้พื้นหลังสีขาว เพื่อความสะอาดและประหยัดหมึก</p>
+                    <h2 class="font-bold text-gray-800 text-lg">รวมภาพ 16 ใบ (พร้อมพิมพ์)</h2>
+                    <p class="text-gray-500 text-sm">ช่วง ID ปัจจุบัน: <span id="current-start-id" class="font-bold text-pink-600">1</span> ถึง <span id="current-end-id" class="font-bold text-pink-600">16</span></p>
                 </div>
                 <div class="flex gap-4">
                     <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 rounded-2xl shadow-lg flex items-center gap-2">
                         🖨️ ปริ้นลงกระดาษ A4
                     </button>
                     <button onclick="downloadBatchImage()" class="bg-gray-800 hover:bg-black text-white font-bold px-8 py-4 rounded-2xl flex items-center gap-2">
-                        🖼️ บันทึกเป็นรูปภาพรวม (4x4)
+                        🖼️ บันทึกเป็นรูปภาพรวม
                     </button>
                 </div>
             </div>
 
-            <!-- ปรับพื้นหลังคอนเทนเนอร์เป็นสีขาว -->
             <div class="overflow-auto bg-white p-10 rounded-2xl shadow-inner border flex justify-center">
                 <div id="preview-grid" class="preview-grid-container">
-                    <!-- 16 Cards -->
+                    <!-- 16 Cards Generated by JS -->
                 </div>
             </div>
         </div>
@@ -304,6 +330,61 @@
     </template>
 
     <script>
+        // Initialize Batch Selector
+        function initBatchSelector() {
+            const container = document.getElementById('batch-selector');
+            container.innerHTML = '';
+            for (let i = 0; i < 10; i++) {
+                const startNum = 1 + (i * 16);
+                const endNum = startNum + 15;
+                const label = document.createElement('label');
+                label.id = `batch-label-${startNum}`;
+                label.className = 'batch-chip flex items-center gap-3 p-3 border rounded-xl hover:border-pink-300 transition-colors cursor-pointer';
+                label.innerHTML = `
+                    <input type="radio" name="id-batch" id="radio-batch-${startNum}" value="${startNum}" onchange="setStartId(${startNum})">
+                    <span class="text-sm font-bold text-gray-600 italic">ชุดที่ ${i+1}:</span>
+                    <span class="text-sm font-bold text-gray-800">${startNum} - ${endNum}</span>
+                `;
+                container.appendChild(label);
+            }
+            updateActiveBatch();
+        }
+
+        // Sync batch selection when typing manual ID
+        function handleIdInput() {
+            updateAll();
+            updateActiveBatch();
+        }
+
+        // Logic to find which batch the current ID belongs to and select it
+        function updateActiveBatch() {
+            const currentId = parseInt(document.getElementById('idInputSingle').value) || 1;
+            
+            // Calculate which batch this ID falls into
+            // Formula: Find the multiple of 16 that is less than currentId
+            // Example: ID 20 -> (20-1)/16 = 1.18 -> floor(1.18) = 1 -> 1*16 + 1 = 17
+            const batchStart = Math.floor((currentId - 1) / 16) * 16 + 1;
+            
+            const radio = document.getElementById(`radio-batch-${batchStart}`);
+            if (radio) {
+                radio.checked = true;
+                // Add visual feedback to label
+                document.querySelectorAll('.batch-chip').forEach(el => el.classList.remove('active', 'border-pink-500', 'bg-pink-50'));
+                const label = document.getElementById(`batch-label-${batchStart}`);
+                if (label) label.classList.add('active', 'border-pink-500', 'bg-pink-50');
+            } else {
+                // If ID is out of range of our 10 batches, uncheck all
+                document.querySelectorAll('input[name="id-batch"]').forEach(r => r.checked = false);
+                document.querySelectorAll('.batch-chip').forEach(el => el.classList.remove('active', 'border-pink-500', 'bg-pink-50'));
+            }
+        }
+
+        function setStartId(num) {
+            document.getElementById('idInputSingle').value = num;
+            updateAll();
+            updateActiveBatch();
+        }
+
         function switchTab(target) {
             document.getElementById('section-edit').classList.toggle('hidden', target !== 'edit');
             document.getElementById('section-print').classList.toggle('hidden', target !== 'print');
@@ -317,8 +398,8 @@
         }
 
         function updateAll() {
-            const startIdStr = document.getElementById('idInputSingle').value;
-            const startId = parseInt(startIdStr) || 2;
+            const startIdInput = document.getElementById('idInputSingle');
+            const startId = parseInt(startIdInput.value) || 1;
             const idSize = document.getElementById('sizeInputSingle').value;
             const text = document.getElementById('textInputSingle').value;
             const textSize = document.getElementById('textSizeInput').value;
@@ -329,9 +410,12 @@
             document.getElementById('textSizeVal').innerText = textSize + 'rem';
             document.getElementById('qrSizeVal').innerText = qrSize + 'px';
             document.getElementById('qrOffsetVal').innerText = qrOffset + 'px';
+            
+            document.getElementById('current-start-id').innerText = startId;
+            document.getElementById('current-end-id').innerText = startId + 15;
 
             const config = {
-                id: startIdStr,
+                id: startId.toString(),
                 idSize: idSize,
                 text: text,
                 textSize: textSize,
@@ -407,19 +491,19 @@
 
         async function downloadSingleCard() {
             const card = document.querySelector('#single-preview .card-container');
-            const canvas = await html2canvas(card, { scale: 10, useCORS: true, backgroundColor: null });
+            const canvas = await html2canvas(card, { scale: 5, useCORS: true, backgroundColor: null });
             saveCanvas(canvas, `VMOVE-SINGLE-${document.getElementById('idInputSingle').value}.png`);
         }
 
         async function downloadBatchImage() {
             const grid = document.getElementById('preview-grid');
             const canvas = await html2canvas(grid, { 
-                scale: 6, 
+                scale: 4, 
                 useCORS: true,
                 backgroundColor: "#ffffff",
                 logging: false
             });
-            saveCanvas(canvas, `VMOVE-BATCH-4x4-WhiteBG.png`);
+            saveCanvas(canvas, `VMOVE-BATCH-${document.getElementById('idInputSingle').value}.png`);
         }
 
         function saveCanvas(canvas, filename) {
@@ -429,7 +513,10 @@
             link.click();
         }
 
-        window.onload = updateAll;
+        window.onload = () => {
+            initBatchSelector();
+            updateAll();
+        };
     </script>
 </body>
 </html>
